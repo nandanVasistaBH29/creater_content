@@ -35,10 +35,12 @@ export default function handler(req, res) {
           );
 
           db.release();
-          return res.status(200).json({ token });
+          return res.status(200).json({ token, user_id: data[0].user_id });
         });
       });
     });
+  } else {
+    res.json({ err: "Verification Failed" });
   }
 }
 const verifyOTP = (encOTP, otp) => {

@@ -26,7 +26,6 @@ const Login = () => {
   const register_user = async (e) => {
     e.preventDefault();
     try {
-      console.log("hi");
       const res = await axios.post("/api/auth/login", {
         username,
         email,
@@ -36,6 +35,7 @@ const Login = () => {
       localStorage.setItem("creater-content-email", email);
       localStorage.setItem("creater-content-username", username);
       localStorage.setItem("creater-content-token", res.data.token);
+      localStorage.setItem("creater-content-user_id", res.data.user_id);
       route.push("/videos/list-videos");
     } catch (err) {
       console.log(err);
@@ -44,8 +44,7 @@ const Login = () => {
   return (
     <div className="flex justify-center items-center h-screen bg-gray-100">
       <div className="w-full max-w-md bg-white rounded-lg shadow-md p-8">
-        <h2 className="text-2xl font-bold mb-4">Register User</h2>
-
+        <h2 className="text-2xl font-bold mb-4">Login User</h2>
         <div className="mb-4">
           <label htmlFor="otp" className="block text-gray-700 font-bold mb-2">
             otp

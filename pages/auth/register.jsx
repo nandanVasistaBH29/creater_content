@@ -36,6 +36,7 @@ const RegisterUser = () => {
       localStorage.setItem("creater-content-email", email);
       localStorage.setItem("creater-content-username", username);
       localStorage.setItem("creater-content-token", res.data.token);
+      localStorage.setItem("creater-content-user_id", res.data.user_id);
       route.push("/videos/list-videos");
     } catch (err) {
       console.log(err);
