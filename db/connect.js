@@ -13,5 +13,5 @@ export const pool = mysql.createPool({
   host: "127.0.0.1",
   user: "root",
   password: process.env.LOCAL_MYSQL_PASSWORD,
-  database: "customer_worker",
+  database: "creater_content",
 });

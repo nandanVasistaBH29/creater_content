@@ -9,8 +9,12 @@ CREATE TABLE `creater_content`.`users` (
   PRIMARY KEY (`user_id`),
   UNIQUE INDEX `email_UNIQUE` (`email` ASC) VISIBLE);
 
+truncate `creater_content`.`users`;
+truncate `creater_content`.`videos`;
+truncate  `creater_content`.`comments`;
 select * from `creater_content`.`users`;
-
+drop table videos;
+drop table comments;
 CREATE TABLE `creater_content`.`videos` (
   `video_id` VARCHAR(45) NOT NULL,
   `title` VARCHAR(100) NOT NULL Unique,
