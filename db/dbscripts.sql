@@ -26,6 +26,7 @@ CREATE TABLE `creater_content`.`videos` (
   PRIMARY KEY (`video_id`),
   FOREIGN KEY (`uploader_id`) REFERENCES `creater_content`.`users` (`user_id`) ON DELETE SET NULL
 );
+select * from videos;
 
 create table  `creater_content`.`comments`(
 `user_id` VARCHAR(45) NOT NULL,
