@@ -1,20 +1,34 @@
 import axios from "axios";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 
 const VideoList = () => {
   const [videos, setVideos] = useState([]);
-  useEffect(() => {
-    const user_id = localStorage.getItem("creater-content-user_id");
-    if (!user_id) return;
-    (async function () {
+  const fetchData = async () => {
+    try {
+      const user_id = localStorage.getItem("creater-content-user_id");
+      if (!user_id) return;
+
       const res = await axios.get(
         `/api/videos/get-video-of-user?user_id=${user_id}`
       );
-      console.log(res.data.videos);
-      setVideos(res.data.videos);
-    })();
+
+      return res.data.videos;
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const cachedVideos = useMemo(async () => {
+    const data = await fetchData();
+    return data;
   }, []);
+
+  useEffect(() => {
+    cachedVideos.then((data) => {
+      setVideos(data);
+    });
+  }, [cachedVideos]);
   return (
     <div className="flex flex-wrap justify-center">
       {videos !== [] &&
