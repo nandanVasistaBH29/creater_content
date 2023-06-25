@@ -8,7 +8,7 @@ const NavBar = () => {
           <Link href="/">CREATER_CONTENT</Link>
         </div>
         <div className="space-x-4 flex">
-          <Link href="/videos/add-videos">
+          <Link href="/videos/add-video">
             <div className="text-white hover:text-gray-300">Add Video</div>
           </Link>
           <Link href="/videos/list-videos">
