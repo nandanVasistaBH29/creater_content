@@ -46,7 +46,7 @@ function VideoPlayer({ video_id }) {
     }
   };
   return (
-    <div className="flex flex-col justify-center items-center h-screen bg-gradient-to-br from-orange-500 to-yellow-400">
+    <div className="flex flex-col justify-center items-center h-fit bg-gradient-to-br from-orange-500 to-yellow-400 p-4">
       {videoData ? (
         <div className="text-white text-center">
           <h2 className="text-4xl font-bold mb-4">{videoData.title}</h2>
