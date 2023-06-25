@@ -58,7 +58,8 @@ const VideoUpload = () => {
   }
 
   return (
-    <div className="bg-gradient-to-r from-purple-500 to-blue-500 min-h-screen flex justify-center items-center">
+    <div className=" bg-gradient-to-r from-purple-500 to-blue-500 min-h-screen flex flex-col justify-center items-center">
+      <h1 className="text-white text-5xl">Upload Video</h1>
       <div className="container mx-auto p-4 bg-white rounded-lg shadow-lg">
         {error && <p className="text-red-500">{error}</p>}
         {submitting && <p className="text-blue-500">{progress}%</p>}
