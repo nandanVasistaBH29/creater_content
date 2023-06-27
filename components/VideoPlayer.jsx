@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { BiSolidLike, BiSolidDislike } from "react-icons/bi";
+import { BiLike, BiDislike } from "react-icons/bi";
 
 function VideoPlayer({ video_id }) {
   const [videoData, setVideoData] = useState(null);
@@ -63,7 +63,7 @@ function VideoPlayer({ video_id }) {
     }
   };
   return (
-    <div className="flex flex-col justify-center items-center h-fit bg-gradient-to-br from-orange-500 to-yellow-400 p-4">
+    <div className="flex flex-col justify-center items-center min-h-screen h-fit bg-gradient-to-br from-orange-500 to-yellow-400 p-4">
       {videoData ? (
         <div className="text-white text-center">
           <h2 className="text-4xl font-bold mb-4">{videoData.title}</h2>
@@ -75,17 +75,17 @@ function VideoPlayer({ video_id }) {
       {videoSrc && (
         <video
           src={videoSrc}
-          width="800px"
           height="auto"
           controls
           autoPlay
           id="video-player"
-          className="rounded-lg shadow-lg mt-4"
+          className="max-w-full rounded-lg shadow-lg mt-4"
         />
       )}
+
       <div className="video-player-options">
         <div className="options-toggle" onClick={handleToggleOptions}>
-          Quality : {videoVersion}
+          Quality: {videoVersion}
         </div>
         {showOptions && (
           <div className="options-dropdown">
@@ -110,6 +110,7 @@ function VideoPlayer({ video_id }) {
           </div>
         )}
       </div>
+
       <div>
         {videoData && (
           <p className="text-lg text-white">{videoData.description}</p>
@@ -120,14 +121,14 @@ function VideoPlayer({ video_id }) {
               onClick={() => handleLikeDislike("like")}
               className="text-green-500 hover:text-green-600 mx-2"
             >
-              <BiSolidLike size={24} />
+              <BiLike size={24} />
             </button>
             <span className="text-lg text-white mx-2">{likes}</span>
             <button
               onClick={() => handleLikeDislike("dis_likes")}
               className="text-red-500 hover:text-red-600 mx-2"
             >
-              <BiSolidDislike size={24} />
+              <BiDislike size={24} />
             </button>
             <span className="text-lg text-white mx-2">{dislikes}</span>
           </div>
