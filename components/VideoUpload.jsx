@@ -3,17 +3,17 @@ import axios from "axios";
 
 const VideoUpload = () => {
   const [file, setFile] = useState();
-  const [progress, setProgress] = useState(0);
+  const [progress, setProgress] = useState(null);
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
 
   async function handleSubmit() {
-    // const data = new FormData();
     const user_id = localStorage.getItem("creater-content-user_id");
     if (!file || !user_id) return;
     setError(null);
+    setProgress(null);
     setSubmitting(true);
 
     const formData = new FormData();
@@ -40,6 +40,8 @@ const VideoUpload = () => {
           ...config,
         }
       );
+      setProgress("Updating meta data please wait");
+      console.log(res);
       if (res.data.video_id) {
         const res2 = await axios.post("/api/videos/add-video-metadata", {
           user_id,
@@ -47,6 +49,9 @@ const VideoUpload = () => {
           title,
           description,
         });
+        setProgress("done");
+
+        console.log(res2);
       }
     } catch (e) {
       setError(e.message);

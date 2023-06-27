@@ -6,6 +6,23 @@ function VideoPlayer({ video_id }) {
   const [videoData, setVideoData] = useState(null);
   const [likes, setLikes] = useState(0);
   const [dislikes, setDislikes] = useState(0);
+  const [videoVersion, setVideoVersion] = useState(
+    "Select The desired Quality"
+  );
+  const [videoSrc, setVideoSrc] = useState(
+    `/api/videos/video?video_id=${video_id}`
+  );
+  const [showOptions, setShowOptions] = useState(false);
+
+  const handleToggleOptions = () => {
+    setShowOptions(!showOptions);
+  };
+
+  const handleSelectVersion = (version) => {
+    setVideoVersion(version);
+    setShowOptions(false);
+    setVideoSrc(`/api/videos/video?video_id=${video_id}__${version}`);
+  };
 
   useEffect(() => {
     const getMetaData = async () => {
@@ -39,7 +56,7 @@ function VideoPlayer({ video_id }) {
         }
       );
     } else if (type === "dis_likes") {
-      const res2 = await setDislikes(dislikes + 1);
+      setDislikes(dislikes + 1);
       axios.put(`/api/videos/update-video-metadata?video_id=${video_id}`, {
         dis_likes: dislikes + (type === "dis_likes" ? 1 : 0),
       });
@@ -55,15 +72,44 @@ function VideoPlayer({ video_id }) {
         <p className="text-white">Loading video data...</p>
       )}
 
-      <video
-        src={`/api/videos/video?video_id=${video_id}`}
-        width="800px"
-        height="auto"
-        controls
-        autoPlay
-        id="video-player"
-        className="rounded-lg shadow-lg mt-4"
-      />
+      {videoSrc && (
+        <video
+          src={videoSrc}
+          width="800px"
+          height="auto"
+          controls
+          autoPlay
+          id="video-player"
+          className="rounded-lg shadow-lg mt-4"
+        />
+      )}
+      <div className="video-player-options">
+        <div className="options-toggle" onClick={handleToggleOptions}>
+          Quality : {videoVersion}
+        </div>
+        {showOptions && (
+          <div className="options-dropdown">
+            <button
+              className="bg-red-500 hover:bg-red-700 text-white font-bold p-2 px-4 rounded-lg"
+              onClick={() => handleSelectVersion("144p")}
+            >
+              144p
+            </button>
+            <button
+              className="bg-blue-500 hover:bg-blue-700 text-white font-bold p-2 px-4 rounded-lg"
+              onClick={() => handleSelectVersion("360p")}
+            >
+              360p
+            </button>
+            <button
+              className="bg-green-500 hover:bg-green-700 text-white font-bold p-2 px-4 rounded-lg"
+              onClick={() => handleSelectVersion("720p")}
+            >
+              720p
+            </button>
+          </div>
+        )}
+      </div>
       <div>
         {videoData && (
           <p className="text-lg text-white">{videoData.description}</p>
