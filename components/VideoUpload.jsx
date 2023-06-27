@@ -6,18 +6,18 @@ const VideoUpload = () => {
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
-
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
 
   async function handleSubmit() {
-    const data = new FormData();
+    // const data = new FormData();
     const user_id = localStorage.getItem("creater-content-user_id");
     if (!file || !user_id) return;
     setError(null);
     setSubmitting(true);
 
-    data.append("file", file);
+    const formData = new FormData();
+    formData.append("video", file);
 
     const config = {
       onUploadProgress: function (progressEvent) {
@@ -30,9 +30,16 @@ const VideoUpload = () => {
     };
 
     try {
-      const res = await axios.post("/api/videos/video", data, config);
-      // const obj = JSON.parse(res.data);
-      console.log(res.data.video_id);
+      const res = await axios.post(
+        "/api/videos/upload-video-multiple-version",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+          ...config,
+        }
+      );
       if (res.data.video_id) {
         const res2 = await axios.post("/api/videos/add-video-metadata", {
           user_id,
@@ -40,7 +47,6 @@ const VideoUpload = () => {
           title,
           description,
         });
-        console.log(res2);
       }
     } catch (e) {
       setError(e.message);
