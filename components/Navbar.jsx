@@ -2,7 +2,7 @@ import Link from "next/link";
 
 const NavBar = () => {
   return (
-    <nav className="bg-gray-800 py-4 h-10 flex justify-center items-center p-2">
+    <nav className="bg-gradient-to-r from-teal-400 to-blue-500 py-4 h-10 flex justify-center items-center p-2 ">
       <div className="container mx-auto flex justify-between items-center">
         <div className="text-white text-xl font-bold">
           <Link href="/">CREATER_CONTENT</Link>

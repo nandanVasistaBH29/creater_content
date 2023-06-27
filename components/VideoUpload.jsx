@@ -69,14 +69,14 @@ const VideoUpload = () => {
   }
 
   return (
-    <div className=" bg-gradient-to-r from-purple-500 to-blue-500 min-h-screen flex flex-col justify-center items-center">
+    <div className="bg-gradient-to-r from-teal-400 to-blue-500 min-h-screen flex flex-col justify-center items-center">
       <h1 className="text-white text-5xl">Upload Video</h1>
       <div className="container mx-auto p-4 bg-white rounded-lg shadow-lg">
         {error && <p className="text-red-500">{error}</p>}
         {submitting && <p className="text-blue-500">{progress}%</p>}
         <form className="my-4">
           <div className="flex items-center mb-4">
-            <label htmlFor="file" className="mr-2">
+            <label htmlFor="file" className="mr-2 text-teal-500">
               File
             </label>
             <input
@@ -88,7 +88,7 @@ const VideoUpload = () => {
             />
           </div>
           <div className="flex items-center mb-4">
-            <label htmlFor="title" className="mr-2">
+            <label htmlFor="title" className="mr-2 text-teal-500">
               Title
             </label>
             <input
@@ -101,7 +101,7 @@ const VideoUpload = () => {
             />
           </div>
           <div className="flex items-center mb-4">
-            <label htmlFor="description" className="mr-2">
+            <label htmlFor="description" className="mr-2 text-teal-500">
               Description
             </label>
             <textarea
@@ -112,13 +112,14 @@ const VideoUpload = () => {
               className="py-1 px-2 border rounded"
             />
           </div>
+          <button
+            onClick={handleSubmit}
+            className="bg-teal-500 text-white py-2 px-4 rounded mt-4 hover:bg-teal-600"
+            disabled={!file || !title || !description || submitting}
+          >
+            {submitting ? "Uploading..." : "Upload Video"}
+          </button>
         </form>
-        <button
-          onClick={handleSubmit}
-          className="bg-blue-500 text-white py-2 px-4 rounded mt-4"
-        >
-          Upload video
-        </button>
       </div>
     </div>
   );
