@@ -2,7 +2,11 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { promises } from "fs";
 import { IncomingForm } from "formidable";
 import { v4 as uuidv4 } from "uuid";
-import { convertVideo, RESOLUTIONS } from "../../../ffmpeg/config";
+import {
+  convertVideo,
+  RESOLUTIONS,
+  convertVideoToThumbnail,
+} from "../../../ffmpeg/config";
 import path from "path";
 
 export const config = {
@@ -43,10 +47,12 @@ export default async function handler(
       videosFolder,
       `${videoId}${originalFileExt}`
     );
+    const thumbnailFolder = path.join(rootFolder, "thumbnails");
 
     try {
       // Create the "videos" folder if it doesn't exist
       await promises.mkdir(videosFolder, { recursive: true });
+      await promises.mkdir(thumbnailFolder, { recursive: true });
       // Rename file to the generated video ID
       await promises.rename(filepath, originalFilePath);
 
@@ -65,6 +71,20 @@ export default async function handler(
           convertVideo(originalFilePath, filePath, dimensions)
         )
       );
+
+      convertVideoToThumbnail(
+        path.join(rootFolder, "videos") + "/" + videoId + originalFileExt,
+        path.join(rootFolder, "thumbnails") + "/" + videoId + ".png",
+        RESOLUTIONS[0].dimensions
+      )
+        .then((outputPath) => {
+          console.log("Thumbnail generated successfully at:", outputPath);
+          // Further operations with the thumbnail image
+        })
+        .catch((error) => {
+          console.error("Error generating thumbnail:", error);
+          // Handle the error appropriately
+        });
 
       res
         .status(200)
