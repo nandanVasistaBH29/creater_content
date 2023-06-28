@@ -2,6 +2,7 @@ import axios from "axios";
 import Link from "next/link";
 import { useEffect, useState, useMemo } from "react";
 import NavBar from "../../components/Navbar";
+import Image from "next/image";
 
 const VideoList = () => {
   const [videos, setVideos] = useState([]);
@@ -45,6 +46,7 @@ const VideoList = () => {
                   <img
                     src={`/api/thumbnails/get-thumbnail?video_id=${video.video_id}`}
                     className="rounded-lg shadow-lg mt-4 h-80 w-full"
+                    alt="thumbnail of the video "
                   />
                 </div>
                 <div>
