@@ -1,5 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
+import { useRouter } from "next/router";
+import Link from "next/link";
 
 const VideoUpload = () => {
   const [file, setFile] = useState();
@@ -8,10 +10,12 @@ const VideoUpload = () => {
   const [submitting, setSubmitting] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-
+  const [videoUploaded, setVideoUploaded] = useState(false);
+  const router = useRouter();
   async function handleSubmit() {
     const user_id = localStorage.getItem("creater-content-user_id");
-    if (!file || !user_id) return;
+    if (!file || !user_id || !title || !description) return;
+    setVideoUploaded(false);
     setError(null);
     setProgress(null);
     setSubmitting(true);
@@ -50,7 +54,7 @@ const VideoUpload = () => {
           description,
         });
         setProgress("done");
-
+        setVideoUploaded(true);
         console.log(res2);
       }
     } catch (e) {
@@ -115,10 +119,26 @@ const VideoUpload = () => {
           <button
             onClick={handleSubmit}
             className="bg-teal-500 text-white py-2 px-4 rounded mt-4 hover:bg-teal-600"
-            disabled={!file || !title || !description || submitting}
+            disabled={
+              !file || !title || !description || submitting || submitting
+            }
           >
             {submitting ? "Uploading..." : "Upload Video"}
           </button>
+          <br />
+          <br />
+
+          {videoUploaded && (
+            <>
+              <Link
+                className="bg-teal-500 text-white py-2 px-4 rounded mt-4
+              hover:bg-teal-600"
+                href={"/mail"}
+              >
+                Mail To Team Members
+              </Link>
+            </>
+          )}
         </form>
       </div>
     </div>
