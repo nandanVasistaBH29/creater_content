@@ -28,6 +28,7 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@types/busboy": "^1.5.0"
+    "@types/busboy": "^1.5.0",
+    "@types/mysql": "^2.15.21"
   }
 }
