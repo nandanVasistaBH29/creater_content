@@ -12,7 +12,7 @@ CREATE TABLE `creater_content`.`users` (
 truncate `creater_content`.`users`;
 truncate `creater_content`.`videos`;
 truncate  `creater_content`.`comments`;
-select * from `creater_content`.`users`;
+select * from `creater_content`.`videos`;
 drop table videos;
 drop table comments;
 CREATE TABLE `creater_content`.`videos` (
@@ -21,11 +21,13 @@ CREATE TABLE `creater_content`.`videos` (
   `description` VARCHAR(255) NOT NULL,
   `likes` BIGINT NOT NULL DEFAULT 0,
   `dis_likes` BIGINT NOT NULL DEFAULT 0,
+  `view_count` BIGINT NOT NULL DEFAULT 0,
   `video_links` MEDIUMTEXT,
   `uploader_id` VARCHAR(45),
   PRIMARY KEY (`video_id`),
   FOREIGN KEY (`uploader_id`) REFERENCES `creater_content`.`users` (`user_id`) ON DELETE SET NULL
 );
+select * from videos;
 
 create table  `creater_content`.`comments`(
 `user_id` VARCHAR(45) NOT NULL,
@@ -40,4 +42,27 @@ FOREIGN KEY (`video_id`) REFERENCES `creater_content`.`videos` (`video_id`) ON D
 
 
 select * from comments;
+select * from videos;
+truncate videos;
+
+drop table teams;
+drop table team_members;
+
+CREATE TABLE `creater_content`.`teams` (
+  `team_id` INT NOT NULL AUTO_INCREMENT,
+  `team_name` VARCHAR(100) NOT NULL,
+  `owner_id` VARCHAR(45) NOT NULL,
+  PRIMARY KEY (`team_id`),
+  UNIQUE INDEX `team_name_UNIQUE` (`team_name` ASC) VISIBLE,
+  FOREIGN KEY (`owner_id`) REFERENCES `creater_content`.`users` (`user_id`) ON DELETE CASCADE
+);
+
+CREATE TABLE `creater_content`.`team_members` (
+  `team_id` INT NOT NULL,
+  `user_id` VARCHAR(45) NOT NULL,
+`role` text not null,
+  PRIMARY KEY (`team_id`, `user_id`),
+  FOREIGN KEY (`team_id`) REFERENCES `creater_content`.`teams` (`team_id`) ON DELETE CASCADE,
+  FOREIGN KEY (`user_id`) REFERENCES `creater_content`.`users` (`user_id`) ON DELETE CASCADE
+);
 
