@@ -40,7 +40,7 @@ export const RESOLUTIONS = [
   { size: "144p", dimensions: "256x144" },
 ];
 
-export function convertVideoToThumbnail(
+export async function convertVideoToThumbnail(
   src: string,
   out: string,
   resolution: string

@@ -37,7 +37,7 @@ export default async function handler(
       return;
     }
 
-    const { filepath, originalFilename } = files.video[0];
+    let { filepath, originalFilename } = files.video[0];
 
     if (!originalFilename) {
       res.status(500).json(`There's no originalFilename...?`);
@@ -48,7 +48,7 @@ export default async function handler(
     const videosFolder = path.join(rootFolder, "videos");
     const videoId = uuidv4(); // Generate unique video ID
     const originalFileExt = path.extname(originalFilename);
-    const originalFilePath = path.join(
+    let originalFilePath = path.join(
       videosFolder,
       `${videoId}${originalFileExt}`
     );
@@ -60,7 +60,6 @@ export default async function handler(
       await promises.mkdir(thumbnailFolder, { recursive: true });
       // Rename file to the generated video ID
       await promises.rename(filepath, originalFilePath);
-
       // Convert video to 720p & 360p & 144p (assuming it's 1080p)
       const resolutionPaths = RESOLUTIONS.map(({ size, dimensions }) => {
         const convertedFilename = `${videoId}__${size}${originalFileExt}`;
@@ -84,18 +83,36 @@ export default async function handler(
         })
       );
 
-      convertVideoToThumbnail(
-        path.join(rootFolder, "videos") + "/" + videoId + originalFileExt,
-        path.join(rootFolder, "thumbnails") + "/" + videoId + ".png",
+      await convertVideoToThumbnail(
+        videosFolder + `/${videoId}.mp4`,
+        thumbnailFolder + "/" + videoId + ".png",
         RESOLUTIONS[0].dimensions
       )
         .then(async (outputPath) => {
-          await uploadFile(outputPath, `${videoId}_thumbnail.png`);
+          await uploadFile(
+            thumbnailFolder + "/" + videoId + ".png",
+            `${videoId}_thumbnail.png`
+          );
+          fs.unlink(thumbnailFolder + "/" + videoId + ".png", (err) => {
+            if (err) {
+              console.error("Error deleting original video file", err);
+              return;
+            }
+          });
         })
         .catch((error) => {
           console.error("Error generating thumbnail:", error);
         });
 
+      //uploading the original version
+      await uploadFile(videosFolder + `/${videoId}.mp4`, `${videoId}.mp4`);
+      //deleting the original file in the local server
+      fs.unlink(videosFolder + `/${videoId}.mp4`, (err) => {
+        if (err) {
+          console.error("Error deleting original video file", err);
+          return;
+        }
+      });
       res
         .status(200)
         .json({ success: "Video uploaded successfully.", video_id: videoId });
@@ -118,6 +135,6 @@ const uploadFile = async (fileName, key_s3) => {
     if (err) {
       throw err;
     }
-    console.log(`File uploaded successfully. ${data.Location}`);
+    console.log(`File uploaded successfully`);
   });
 };
