@@ -1,33 +1,29 @@
-import { S3 } from "aws-sdk";
+import AWS from "aws-sdk";
 
-const s3 = new S3({
-  accessKeyId: "YOUR_ACCESS_KEY",
-  secretAccessKey: "YOUR_SECRET_KEY",
-  region: "YOUR_REGION",
+const s3 = new AWS.S3({
+  accessKeyId: process.env.ACCESS_KEY_ID,
+  secretAccessKey: process.env.SECRET_ACCESS_KEY,
+  region: process.env.S3_BUCKET_REGION,
 });
 
-function getVideoStream(req, res) {
+async function getVideoStream(req, res) {
   const range = req.headers.range;
   const videoId = req.query.video_id;
+
+  const CHUNK_SIZE = 10 ** 6; // 1MB (adjust as needed)
 
   if (!range) {
     return res.status(400).send("Range must be provided. Browser issue.");
   }
 
   const params = {
-    Bucket: "YOUR_BUCKET_NAME",
+    Bucket: process.env.S3_BUCKET_NAME,
     Key: `${videoId}.mp4`,
   };
 
-  s3.headObject(params, (err, data) => {
-    if (err) {
-      console.error("Error retrieving video from S3:", err);
-      return res.status(500).send("Internal Server Error");
-    }
-
+  try {
+    const data = await s3.getObject(params).promise();
     const videoSizeInBytes = data.ContentLength;
-
-    const CHUNK_SIZE = 10 ** 6; // 1MB (adjust as needed)
 
     const chunkStart = Number(range.replace(/\D/g, ""));
     const chunkEnd = Math.min(chunkStart + CHUNK_SIZE, videoSizeInBytes - 1);
@@ -38,17 +34,15 @@ function getVideoStream(req, res) {
       "Accept-Ranges": "bytes",
       "Content-Length": contentLength,
       "Content-Type": "video/mp4",
+      Connection: "close",
     };
 
-    res.writeHead(206, headers);
-
-    const videoStream = s3.getObject(params).createReadStream({
-      start: chunkStart,
-      end: chunkEnd,
-    });
-
-    videoStream.pipe(res);
-  });
+    res.writeHead(206, headers); //still data has to come 206
+    res.end(data.Body.slice(chunkStart, chunkEnd + 1));
+  } catch (err) {
+    console.error("Error retrieving video from S3:", err);
+    return res.status(500).send("Internal Server Error");
+  }
 }
 
 export default function handler(req, res) {

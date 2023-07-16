@@ -9,8 +9,14 @@ function VideoPlayer({ video_id }) {
   const [videoVersion, setVideoVersion] = useState(
     "Select The desired Quality"
   );
+  //non cloud streaming
+  // const [videoSrc, setVideoSrc] = useState(
+  //   `/api/videos/video?video_id=${video_id}`
+  // );
+
+  //cloud streaming
   const [videoSrc, setVideoSrc] = useState(
-    `/api/videos/video?video_id=${video_id}`
+    `/api/videos/video-stream-s3?video_id=${video_id}_720p`
   );
   const [showOptions, setShowOptions] = useState(false);
 
@@ -21,7 +27,8 @@ function VideoPlayer({ video_id }) {
   const handleSelectVersion = (version) => {
     setVideoVersion(version);
     setShowOptions(false);
-    setVideoSrc(`/api/videos/video?video_id=${video_id}__${version}`);
+    // setVideoSrc(`/api/videos/video?video_id=${video_id}__${version}`); non cloud
+    setVideoSrc(`/api/videos/video-stream-s3?video_id=${video_id}_${version}`); // cloud
   };
 
   useEffect(() => {
@@ -34,18 +41,13 @@ function VideoPlayer({ video_id }) {
         setVideoData(res.data.data);
         setLikes(res.data.data.likes);
         setDislikes(res.data.data.dis_likes);
-        const res2 = await axios.put(
-          `/api/videos/update-video-metadata?video_id=${video_id}`,
-          {
-            view_count: res.data.data.view_count + 1,
-          }
-        );
       } catch (err) {
         console.error(err);
       }
     };
     getMetaData();
   }, [video_id]);
+
   const handleLikeDislike = async (type) => {
     if (type === "like") {
       setLikes(likes + 1);
@@ -79,7 +81,7 @@ function VideoPlayer({ video_id }) {
           controls
           autoPlay
           id="video-player"
-          className="max-w-full rounded-lg shadow-lg mt-4"
+          className="w-full max-w-full rounded-lg shadow-lg mt-4 "
         />
       )}
 
