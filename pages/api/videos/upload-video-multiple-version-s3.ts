@@ -69,11 +69,11 @@ export default async function handler(
           filePath: path.join(videosFolder, convertedFilename),
         };
       });
-      let i = 0;
+      let i = 2; //3 versions are there with index 2,1,0
       await Promise.all(
         resolutionPaths.map(async ({ filePath, dimensions }) => {
           await convertVideo(originalFilePath, filePath, dimensions);
-          await uploadFile(filePath, `${videoId}_${RESOLUTIONS[i++].size}.mp4`);
+          await uploadFile(filePath, `${videoId}_${RESOLUTIONS[i--].size}.mp4`);
           fs.unlink(filePath, (err) => {
             if (err) {
               console.error("Error deleting  temp file", err);
