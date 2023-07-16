@@ -67,3 +67,30 @@ export async function convertVideoToThumbnail(
     });
   });
 }
+
+export async function extractAudio(src: string, out: string): Promise<string> {
+  const args = [
+    "-i",
+    src, // input video
+    "-vn", // disable video
+    "-acodec",
+    "pcm_s16le", // audio codec
+    "-ar",
+    "44100", // audio sample rate
+    "-ac",
+    "2", // number of audio channels
+    "-f",
+    "wav", // output format
+    out, // output audio file
+  ];
+
+  return new Promise((resolve, reject) => {
+    execFile(FFMPEG_PATH, args, (error, stdout, stderr) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+      resolve(out);
+    });
+  });
+}

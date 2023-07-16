@@ -6,14 +6,17 @@ import {
   convertVideo,
   RESOLUTIONS,
   convertVideoToThumbnail,
+  extractAudio,
 } from "../../../ffmpeg/config";
 import path from "path";
-import AWS from "aws-sdk";
+import AWS, { AWSError } from "aws-sdk";
+import generateSubtitles from "./get-subtitles-aws-transcribe";
 const s3 = new AWS.S3({
   accessKeyId: process.env.ACCESS_KEY_ID,
   secretAccessKey: process.env.SECRET_ACCESS_KEY,
+  region: process.env.S3_BUCKET_REGION,
 });
-import fs from "fs";
+import fs, { WriteStream } from "fs";
 
 export const config = {
   api: {
@@ -53,13 +56,21 @@ export default async function handler(
       `${videoId}${originalFileExt}`
     );
     const thumbnailFolder = path.join(rootFolder, "thumbnails");
-
+    const audioFolder = path.join(rootFolder, "audios");
+    const subtitlesFolder = path.join(rootFolder, "subtitles");
     try {
-      // Create the "videos" folder if it doesn't exist
       await promises.mkdir(videosFolder, { recursive: true });
       await promises.mkdir(thumbnailFolder, { recursive: true });
+      await promises.mkdir(audioFolder, { recursive: true });
+      await promises.mkdir(subtitlesFolder, { recursive: true });
       // Rename file to the generated video ID
       await promises.rename(filepath, originalFilePath);
+      await extractAudio(originalFilePath, audioFolder + `/${videoId}.wav`);
+      await uploadFile(audioFolder + `/${videoId}.wav`, `${videoId}.wav`); //upload the audio file to s3 so that AWS transcriber can generate subtitles
+      try {
+        await generateSubtitles(subtitlesFolder + `/${videoId}.wav`, videoId);
+      } catch (err) {}
+
       // Convert video to 720p & 360p & 144p (assuming it's 1080p)
       const resolutionPaths = RESOLUTIONS.map(({ size, dimensions }) => {
         const convertedFilename = `${videoId}__${size}${originalFileExt}`;
@@ -74,15 +85,9 @@ export default async function handler(
         resolutionPaths.map(async ({ filePath, dimensions }) => {
           await convertVideo(originalFilePath, filePath, dimensions);
           await uploadFile(filePath, `${videoId}_${RESOLUTIONS[i--].size}.mp4`);
-          fs.unlink(filePath, (err) => {
-            if (err) {
-              console.error("Error deleting  temp file", err);
-              return;
-            }
-          });
+          deleteLocalserverFile(filePath);
         })
       );
-
       await convertVideoToThumbnail(
         videosFolder + `/${videoId}.mp4`,
         thumbnailFolder + "/" + videoId + ".png",
@@ -93,26 +98,22 @@ export default async function handler(
             thumbnailFolder + "/" + videoId + ".png",
             `${videoId}_thumbnail.png`
           );
-          fs.unlink(thumbnailFolder + "/" + videoId + ".png", (err) => {
-            if (err) {
-              console.error("Error deleting original video file", err);
-              return;
-            }
-          });
+          deleteLocalserverFile(thumbnailFolder + "/" + videoId + ".png");
         })
         .catch((error) => {
           console.error("Error generating thumbnail:", error);
         });
 
-      //uploading the original version
-      await uploadFile(videosFolder + `/${videoId}.mp4`, `${videoId}.mp4`);
-      //deleting the original file in the local server
-      fs.unlink(videosFolder + `/${videoId}.mp4`, (err) => {
-        if (err) {
-          console.error("Error deleting original video file", err);
-          return;
-        }
-      });
+      //deleting the original files in the local server
+      deleteLocalserverFile(videosFolder + `/${videoId}.mp4`);
+      deleteLocalserverFile(audioFolder + `/${videoId}.wav`);
+
+      await deleteFileFromS3(`${videoId}.wav`);
+      console.log("Audio file deleted from S3.");
+
+      // await deleteFileFromS3(`${videoId}.srt`);
+      // console.log("Subtitles file deleted from S3.");
+
       res
         .status(200)
         .json({ success: "Video uploaded successfully.", video_id: videoId });
@@ -122,19 +123,73 @@ export default async function handler(
     }
   });
 }
-
-const uploadFile = async (fileName, key_s3) => {
+const deleteLocalserverFile = (localFileName: string) => {
+  fs.unlink(localFileName, (err) => {
+    if (err) {
+      console.error("Error deleting original video file", err);
+      return;
+    }
+  });
+};
+const uploadFile = async (fileName: string, key_s3: string): Promise<void> => {
   const fileContent = fs.readFileSync(fileName);
-  const params = {
+  const params: AWS.S3.PutObjectRequest = {
     Bucket: process.env.S3_BUCKET_NAME,
     Key: key_s3, // File name you want to save as in S3
     Body: fileContent,
   };
 
-  s3.upload(params, function (err, data) {
-    if (err) {
-      throw err;
-    }
-    console.log(`File uploaded successfully`);
-  });
+  try {
+    const s3 = new AWS.S3();
+    const data = await s3.upload(params).promise();
+    console.log(`File uploaded successfully: ${fileName}`);
+  } catch (err) {
+    console.log(err);
+  }
 };
+
+export async function downloadFileFromS3(
+  key: string,
+  localFilePath: string
+): Promise<void> {
+  const s3 = new AWS.S3();
+
+  const params = {
+    Bucket: process.env.S3_BUCKET_NAME,
+    Key: key,
+  };
+
+  const fileStream = fs.createWriteStream(localFilePath);
+
+  return new Promise((resolve, reject) => {
+    s3.getObject(params)
+      .createReadStream()
+      .on("error", (error: Error) => {
+        reject(error);
+      })
+      .pipe(fileStream)
+      .on("error", (error: Error) => {
+        reject(error);
+      })
+      .on("close", () => {
+        resolve();
+      });
+  });
+}
+async function deleteFileFromS3(s3Key: string): Promise<void> {
+  try {
+    const s3 = new AWS.S3({ region: process.env.S3_BUCKET_REGION });
+
+    const deleteParams: AWS.S3.DeleteObjectRequest = {
+      Bucket: process.env.S3_BUCKET_NAME,
+      Key: s3Key,
+    };
+
+    await s3.deleteObject(deleteParams).promise();
+
+    console.log(`File deleted from S3: ${s3Key}`);
+  } catch (error) {
+    console.error("Error deleting file from S3:", error);
+    throw error;
+  }
+}
