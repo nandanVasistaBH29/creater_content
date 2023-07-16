@@ -6,4 +6,4 @@ const config = new AWS.Config({
   region: process.env.YOUR_S3_BUCKET_REGION,
 });
 
-export const S3 = new AWS.S3(config);
+export const S3_config = new AWS.S3(config);

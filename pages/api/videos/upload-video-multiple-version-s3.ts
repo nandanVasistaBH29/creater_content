@@ -8,6 +8,12 @@ import {
   convertVideoToThumbnail,
 } from "../../../ffmpeg/config";
 import path from "path";
+import AWS from "aws-sdk";
+const s3 = new AWS.S3({
+  accessKeyId: process.env.ACCESS_KEY_ID,
+  secretAccessKey: process.env.SECRET_ACCESS_KEY,
+});
+import fs from "fs";
 
 export const config = {
   api: {
@@ -20,7 +26,6 @@ export default async function handler(
   res: NextApiResponse<any>
 ) {
   const form = new IncomingForm();
-
   form.parse(req, async (err, fields, files) => {
     if (err) {
       res.status(500).json(`${err}`);
@@ -65,11 +70,18 @@ export default async function handler(
           filePath: path.join(videosFolder, convertedFilename),
         };
       });
-
+      let i = 0;
       await Promise.all(
-        resolutionPaths.map(({ filePath, dimensions }) =>
-          convertVideo(originalFilePath, filePath, dimensions)
-        )
+        resolutionPaths.map(async ({ filePath, dimensions }) => {
+          await convertVideo(originalFilePath, filePath, dimensions);
+          await uploadFile(filePath, `${videoId}_${RESOLUTIONS[i++].size}.mp4`);
+          fs.unlink(filePath, (err) => {
+            if (err) {
+              console.error("Error deleting  temp file", err);
+              return;
+            }
+          });
+        })
       );
 
       convertVideoToThumbnail(
@@ -77,8 +89,8 @@ export default async function handler(
         path.join(rootFolder, "thumbnails") + "/" + videoId + ".png",
         RESOLUTIONS[0].dimensions
       )
-        .then((outputPath) => {
-          console.log("Thumbnail generated successfully at:", outputPath);
+        .then(async (outputPath) => {
+          await uploadFile(outputPath, `${videoId}_thumbnail.png`);
         })
         .catch((error) => {
           console.error("Error generating thumbnail:", error);
@@ -93,3 +105,19 @@ export default async function handler(
     }
   });
 }
+
+const uploadFile = async (fileName, key_s3) => {
+  const fileContent = fs.readFileSync(fileName);
+  const params = {
+    Bucket: process.env.S3_BUCKET_NAME,
+    Key: key_s3, // File name you want to save as in S3
+    Body: fileContent,
+  };
+
+  s3.upload(params, function (err, data) {
+    if (err) {
+      throw err;
+    }
+    console.log(`File uploaded successfully. ${data.Location}`);
+  });
+};
