@@ -9,14 +9,9 @@ import {
   extractAudio,
 } from "../../../ffmpeg/config";
 import path from "path";
-import AWS, { AWSError } from "aws-sdk";
+import AWS from "aws-sdk";
 import generateSubtitles from "./get-subtitles-aws-transcribe";
-const s3 = new AWS.S3({
-  accessKeyId: process.env.ACCESS_KEY_ID,
-  secretAccessKey: process.env.SECRET_ACCESS_KEY,
-  region: process.env.S3_BUCKET_REGION,
-});
-import fs, { WriteStream } from "fs";
+import fs from "fs";
 
 export const config = {
   api: {
@@ -68,8 +63,13 @@ export default async function handler(
       await extractAudio(originalFilePath, audioFolder + `/${videoId}.wav`);
       await uploadFile(audioFolder + `/${videoId}.wav`, `${videoId}.wav`); //upload the audio file to s3 so that AWS transcriber can generate subtitles
       try {
-        await generateSubtitles(subtitlesFolder + `/${videoId}.wav`, videoId);
-      } catch (err) {}
+        await generateSubtitles(subtitlesFolder + `/${videoId}.srt`, videoId);
+        //implement a method which burn subtites on to the file
+        // the video file is in /video//${videoId}.mp4`
+        //over ride this
+      } catch (err) {
+        console.log(err);
+      }
 
       // Convert video to 720p & 360p & 144p (assuming it's 1080p)
       const resolutionPaths = RESOLUTIONS.map(({ size, dimensions }) => {

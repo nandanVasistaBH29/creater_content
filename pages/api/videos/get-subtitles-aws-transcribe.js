@@ -5,28 +5,29 @@ AWS.config.update({
   secretAccessKey: process.env.SECRET_ACCESS_KEY,
   region: process.env.S3_BUCKET_REGION,
 });
+
 import { downloadFileFromS3 } from "./upload-video-multiple-version-s3";
+
 export default async function generateSubtitles(
   subtitlesFolderPath_op,
   videoId
 ) {
   try {
-    // Create an instance of the AWS Transcribe service
-    const transcribe = new AWS.TranscribeService();
+    const transcribe = new AWS.TranscribeService({
+      region: process.env.S3_BUCKET_REGION,
+    });
 
-    // Configure the parameters for the transcription job
     const params = {
       Media: {
         MediaFileUri: `s3://${process.env.S3_BUCKET_NAME}/${videoId}.wav`,
       },
-      MediaFormat: "wav", // Specify the format of the audio file
+      MediaFormat: "wav",
       OutputBucketName: process.env.S3_BUCKET_NAME,
       OutputKey: `${videoId}.srt`,
       LanguageCode: "en-US",
       TranscriptionJobName: `${videoId}-subtitles-generation`,
     };
 
-    // Start the transcription job
     const response = await transcribe.startTranscriptionJob(params).promise();
     console.log(
       "Transcription job started:",
@@ -35,12 +36,18 @@ export default async function generateSubtitles(
 
     const transcriptionJobName = response.TranscriptionJob.TranscriptionJobName;
 
-    // Wait for the transcription job to complete
-    const data = await transcribe
-      .waitFor("transcriptionJobCompleted", {
-        TranscriptionJobName: transcriptionJobName,
-      })
-      .promise();
+    let jobStatus;
+    do {
+      const { TranscriptionJob } = await transcribe
+        .getTranscriptionJob({ TranscriptionJobName: transcriptionJobName })
+        .promise();
+      jobStatus = TranscriptionJob.TranscriptionJobStatus;
+      console.log("Transcription job status:", jobStatus);
+      if (jobStatus !== "COMPLETED") {
+        // Wait for 5 seconds before checking again
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+      }
+    } while (jobStatus !== "COMPLETED");
 
     console.log("Subtitles file downloaded.");
     console.log("Transcription job completed.");
