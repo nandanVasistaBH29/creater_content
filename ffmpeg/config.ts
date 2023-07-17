@@ -94,3 +94,36 @@ export async function extractAudio(src: string, out: string): Promise<string> {
     });
   });
 }
+
+export async function burnSubtitles(
+  videoFilePath: string,
+  subtitlesFilePath: string,
+  outputFilePath: string
+): Promise<void> {
+  const args = [
+    "-i",
+    videoFilePath,
+    "-vf",
+    `subtitles=${subtitlesFilePath}:force_style='Fontsize=14'`,
+    "-c:v",
+    "libx264",
+    "-crf",
+    "26",
+    "-pix_fmt",
+    "yuv420p",
+    "-map",
+    "0",
+    "-y", // Overwrite output file if it already exists
+    outputFilePath,
+  ];
+
+  await new Promise<void>((resolve, reject) => {
+    execFile(FFMPEG_PATH, args, (error, stdout, stderr) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve();
+      }
+    });
+  });
+}

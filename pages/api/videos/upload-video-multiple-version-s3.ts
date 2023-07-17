@@ -11,6 +11,8 @@ import {
 import path from "path";
 import AWS from "aws-sdk";
 import generateSubtitles from "./get-subtitles-aws-transcribe";
+import { burnSubtitles } from "../../../ffmpeg/config";
+
 import fs from "fs";
 
 export const config = {
@@ -63,14 +65,22 @@ export default async function handler(
       await extractAudio(originalFilePath, audioFolder + `/${videoId}.wav`);
       await uploadFile(audioFolder + `/${videoId}.wav`, `${videoId}.wav`); //upload the audio file to s3 so that AWS transcriber can generate subtitles
       try {
-        await generateSubtitles(subtitlesFolder + `/${videoId}.srt`, videoId);
-        //implement a method which burn subtites on to the file
-        // the video file is in /video//${videoId}.mp4`
-        //over ride this
+        await generateSubtitles(videoId);
+        const videosFolder = path.join(rootFolder, "videos");
+        await burnSubtitles(
+          videosFolder + `/${videoId}.mp4`,
+          rootFolder + `/subtitles/${videoId}.srt`,
+          videosFolder + `/${videoId}_burnt.mp4`
+        );
+        fs.unlinkSync(videosFolder + `/${videoId}.mp4`);
+        fs.renameSync(
+          videosFolder + `/${videoId}_burnt.mp4`,
+          videosFolder + `/${videoId}.mp4`
+        );
+        console.log("burrning video is done");
       } catch (err) {
         console.log(err);
       }
-
       // Convert video to 720p & 360p & 144p (assuming it's 1080p)
       const resolutionPaths = RESOLUTIONS.map(({ size, dimensions }) => {
         const convertedFilename = `${videoId}__${size}${originalFileExt}`;
@@ -80,7 +90,7 @@ export default async function handler(
           filePath: path.join(videosFolder, convertedFilename),
         };
       });
-      let i = 2; //3 versions are there with index 2,1,0
+      let i = 2; //3 versions are there with index 2,1,0 -> 720,360,144p
       await Promise.all(
         resolutionPaths.map(async ({ filePath, dimensions }) => {
           await convertVideo(originalFilePath, filePath, dimensions);
@@ -107,13 +117,12 @@ export default async function handler(
       //deleting the original files in the local server
       deleteLocalserverFile(videosFolder + `/${videoId}.mp4`);
       deleteLocalserverFile(audioFolder + `/${videoId}.wav`);
-
+      deleteLocalserverFile(subtitlesFolder + `/${videoId}.srt`);
+      deleteLocalserverFile(subtitlesFolder + `/${videoId}.json`);
+      console.log("deleted video audio and subtitles from server");
       await deleteFileFromS3(`${videoId}.wav`);
-      console.log("Audio file deleted from S3.");
-
-      // await deleteFileFromS3(`${videoId}.srt`);
-      // console.log("Subtitles file deleted from S3.");
-
+      await deleteFileFromS3(`${videoId}.json`);
+      console.log("audio and transcribe from s3 deleted");
       res
         .status(200)
         .json({ success: "Video uploaded successfully.", video_id: videoId });

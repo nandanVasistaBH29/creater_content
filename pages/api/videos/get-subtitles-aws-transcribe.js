@@ -1,17 +1,22 @@
 import AWS from "aws-sdk";
+import fs from "fs";
 
 AWS.config.update({
   accessKeyId: process.env.ACCESS_KEY_ID,
   secretAccessKey: process.env.SECRET_ACCESS_KEY,
   region: process.env.S3_BUCKET_REGION,
 });
+import path from "path";
 
 import { downloadFileFromS3 } from "./upload-video-multiple-version-s3";
+import srtConvert from "aws-transcription-to-srt";
 
-export default async function generateSubtitles(
-  subtitlesFolderPath_op,
-  videoId
-) {
+//its important to note that AWS transcribe need the audio file in S3 ( it can be even video file ) but it has to be in s3
+//and it doesn't return the srt it does json file
+
+const rootFolder = path.resolve("./");
+
+export default async function generateSubtitles(videoId) {
   try {
     const transcribe = new AWS.TranscribeService({
       region: process.env.S3_BUCKET_REGION,
@@ -23,7 +28,7 @@ export default async function generateSubtitles(
       },
       MediaFormat: "wav",
       OutputBucketName: process.env.S3_BUCKET_NAME,
-      OutputKey: `${videoId}.srt`,
+      OutputKey: `${videoId}.json`,
       LanguageCode: "en-US",
       TranscriptionJobName: `${videoId}-subtitles-generation`,
     };
@@ -45,15 +50,28 @@ export default async function generateSubtitles(
       console.log("Transcription job status:", jobStatus);
       if (jobStatus !== "COMPLETED") {
         // Wait for 5 seconds before checking again
-        await new Promise((resolve) => setTimeout(resolve, 5000));
+        await new Promise((resolve) => setTimeout(resolve, 10000));
       }
     } while (jobStatus !== "COMPLETED");
-
-    console.log("Subtitles file downloaded.");
-    console.log("Transcription job completed.");
+    await downloadFileFromS3(
+      `${videoId}.json`,
+      rootFolder + `/subtitles/${videoId}.json`
+    );
+    console.log(" Subtitles file downloaded. Transcription job completed.");
+    const data = fs.readFileSync(rootFolder + `/subtitles/${videoId}.json`);
+    const json = JSON.parse(data);
+    const srt_data = srtConvert(json);
+    fs.writeFile(
+      rootFolder + `/subtitles/${videoId}.srt`,
+      srt_data,
+      async (err) => {
+        if (err) {
+          console.error(err);
+        }
+        console.log("done srt");
+      }
+    );
   } catch (error) {
     console.error("Error generating subtitles:", error);
-  } finally {
-    await downloadFileFromS3(`${videoId}.srt`, subtitlesFolderPath_op);
   }
 }
