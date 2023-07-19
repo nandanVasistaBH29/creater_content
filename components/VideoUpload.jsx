@@ -35,7 +35,7 @@ const VideoUpload = () => {
 
     try {
       const res = await axios.post(
-        "/api/videos/upload-video-multiple-version",
+        "/api/videos/upload-video-multiple-version-s3",
         formData,
         {
           headers: {

@@ -40,7 +40,7 @@ export const RESOLUTIONS = [
   { size: "144p", dimensions: "256x144" },
 ];
 
-export function convertVideoToThumbnail(
+export async function convertVideoToThumbnail(
   src: string,
   out: string,
   resolution: string
@@ -64,6 +64,66 @@ export function convertVideoToThumbnail(
         return;
       }
       resolve(out);
+    });
+  });
+}
+
+export async function extractAudio(src: string, out: string): Promise<string> {
+  const args = [
+    "-i",
+    src, // input video
+    "-vn", // disable video
+    "-acodec",
+    "pcm_s16le", // audio codec
+    "-ar",
+    "44100", // audio sample rate
+    "-ac",
+    "2", // number of audio channels
+    "-f",
+    "wav", // output format
+    out, // output audio file
+  ];
+
+  return new Promise((resolve, reject) => {
+    execFile(FFMPEG_PATH, args, (error, stdout, stderr) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+      resolve(out);
+    });
+  });
+}
+
+export async function burnSubtitles(
+  videoFilePath: string,
+  subtitlesFilePath: string,
+  outputFilePath: string
+): Promise<void> {
+  const args = [
+    "-i",
+    videoFilePath,
+    "-vf",
+    `subtitles=${subtitlesFilePath}:force_style='Fontsize=14'`,
+    "-c:v",
+    "libx264",
+    "-crf",
+    "26",
+    "-pix_fmt",
+    "yuv420p",
+    "-map",
+    "0",
+    "-y", // Overwrite output file if it already exists
+    outputFilePath,
+  ];
+
+  await new Promise<void>((resolve, reject) => {
+    execFile(FFMPEG_PATH, args, (error, stdout, stderr) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve();
+      }
     });
   });
 }

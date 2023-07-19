@@ -10,7 +10,8 @@
   },
   "dependencies": {
     "autoprefixer": "10.4.14",
-    "aws-sdk": "^2.1403.0",
+    "aws-sdk": "^2.1415.0",
+    "aws-transcription-to-srt": "^1.0.6",
     "axios": "^1.4.0",
     "busboy": "^1.6.0",
     "crypto-js": "^4.1.1",
@@ -29,6 +30,8 @@
   },
   "devDependencies": {
     "@types/busboy": "^1.5.0",
-    "@types/mysql": "^2.15.21"
+    "@types/formidable": "^3.4.0",
+    "@types/mysql": "^2.15.21",
+    "@types/uuid": "^9.0.2"
   }
 }

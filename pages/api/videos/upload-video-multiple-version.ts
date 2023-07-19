@@ -79,11 +79,9 @@ export default async function handler(
       )
         .then((outputPath) => {
           console.log("Thumbnail generated successfully at:", outputPath);
-          // Further operations with the thumbnail image
         })
         .catch((error) => {
           console.error("Error generating thumbnail:", error);
-          // Handle the error appropriately
         });
 
       res
