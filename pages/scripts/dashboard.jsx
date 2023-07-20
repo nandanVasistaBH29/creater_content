@@ -24,7 +24,7 @@ const Script = () => {
       const res2 = await axios.post("/api/scripts/add-user", {
         doc_id,
         user_id,
-        access: 2,
+        access: "2",
       });
       //owner access enum[-1,0,1,2] 2 is owner 1 is editor 0 is viewer -1 no access
       router.push("/scripts/" + doc_id);
