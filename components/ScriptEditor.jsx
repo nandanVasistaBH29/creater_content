@@ -1,11 +1,11 @@
 import dynamic from "next/dynamic";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import "react-quill/dist/quill.snow.css";
 import { io } from "socket.io-client";
 import { useRouter } from "next/router";
 import axios from "axios";
 
-const SAVE_INTERVAL_MS = 2000;
+const SAVE_INTERVAL_MS = 10000;
 
 const QuillNoSSRWrapper = dynamic(
   async () => {
@@ -124,8 +124,9 @@ const ScriptEditor = () => {
       console.log(err);
     }
   };
-  const saveDoc = async () => {
+  const saveDoc = useCallback(async () => {
     if (user.access == "-1" || user.access == "1" || socket === null) return;
+    console.log("saving");
     socket.emit("save-document", value);
     try {
       const res = await axios.post("/api/scripts/save-or-create-script", {
@@ -137,8 +138,17 @@ const ScriptEditor = () => {
     } catch (err) {
       console.log(err);
     }
-  };
+  }, [value, socket, user.access, doc_id]);
+  //as we are using a continously saving the doc every 5seconds to avoid unnecessary
+  //re-renders make using of useCallBackHook to wrap the saveDoc function
+  useEffect(() => {
+    const saveInterval = setInterval(() => {
+      saveDoc();
+    }, SAVE_INTERVAL_MS);
 
+    // Clean up the interval when the component is unmounted
+    return () => clearInterval(saveInterval);
+  }, [value, saveDoc]);
   return (
     <div className="bg-yellow-50 p-4 rounded-lg shadow-md">
       <div>
