@@ -3,6 +3,9 @@ import { useEffect, useState, useRef } from "react";
 import "react-quill/dist/quill.snow.css";
 import { io } from "socket.io-client";
 import { useRouter } from "next/router";
+import axios from "axios";
+
+const SAVE_INTERVAL_MS = 2000;
 
 const QuillNoSSRWrapper = dynamic(
   async () => {
@@ -50,6 +53,7 @@ const ScriptEditor = () => {
   const quillRef = useRef(null); // Ref to access the Quill instance
   const router = useRouter();
   const [disable, setDisable] = useState(true);
+  const [metaDocData, setMetaDocData] = useState({});
   const { slug: doc_id } = router.query;
   if (doc_id === "") router.push("/scripts/dashboard");
 
@@ -63,8 +67,6 @@ const ScriptEditor = () => {
 
   useEffect(() => {
     if (socket) {
-      socket.emit("get-document", doc_id);
-      loadTheDoc(socket);
       socket.on("recieve-changes", (delta) => {
         if (quillRef.current) {
           const editor = quillRef.current?.getEditor();
@@ -74,32 +76,70 @@ const ScriptEditor = () => {
       });
     }
   }, [socket]);
-  const loadTheDoc = async (socket) => {
-    await socket.once("load-document", (document) => {
-      console.log(document);
-      setDisable(false);
-      const editor = quillRef.current?.getEditor();
-      console.log(editor);
-      if (editor) editor.updateContents(document); // Apply the new content to the editor
-    });
-  };
+
   //delta is all the small small changes made on the editor
   function handleChange(content, delta, source, editor) {
     if (source !== "user" || socket === null) return;
+
+    setValue(content);
     socket.emit("send-changes", delta);
   }
+  const handleClick_Load = async () => {
+    socket.emit("get-document", doc_id);
+    socket.once("load-document", (document_content) => {});
+    try {
+      const res = await axios.post("/api/scripts/get-script", {
+        doc_id,
+      });
+      if (res.data) {
+        console.log(res.data.data);
+        setMetaDocData(res.data.data);
+        setDisable(false);
+        setValue(res.data.data.content);
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
+  const saveDoc = async () => {
+    socket.emit("save-document", value);
+    try {
+      const res = await axios.post("/api/scripts/save-or-create-script", {
+        title: "",
+        content: value,
+        doc_id,
+      });
+      console.log(res);
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   return (
     <div className="bg-yellow-50 p-4 rounded-lg shadow-md">
-      <QuillNoSSRWrapper
-        modules={modules}
-        formats={formats}
-        theme="snow"
-        forwardedRef={quillRef}
-        value={value}
-        onChange={handleChange}
-        placeholder="create your main content"
-      />
+      {!disable && (
+        <QuillNoSSRWrapper
+          modules={modules}
+          formats={formats}
+          theme="snow"
+          forwardedRef={quillRef}
+          value={value}
+          onChange={handleChange}
+          placeholder="create your main content"
+        />
+      )}
+      <button
+        onClick={handleClick_Load}
+        className="bg-blue-600 text-white p-4 m-2 rounded-md"
+      >
+        Load the Previous Content
+      </button>
+      <button
+        onClick={saveDoc}
+        className="bg-blue-600 text-white p-4 m-2 rounded-md"
+      >
+        Save Document
+      </button>
     </div>
   );
 };

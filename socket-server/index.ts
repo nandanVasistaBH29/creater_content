@@ -15,12 +15,11 @@ io.on("connection", async (socket) => {
     // doc_id is uuid
     if (doc_id === "") return;
 
-    const document = await findOrCreateDocument(doc_id);
-
-    const data = "hello world";
+    // const data = "<h1>hello world</h1>";
     socket.join(doc_id); //need to join this doc / room
-    socket.emit("load-document", data); //sending the data from server
+    socket.emit("load-document", ""); //sending the data from server
     socket.on("send-changes", (delta) => {
+      console.log(delta);
       //this below line is sent to all docs we wanna send it to specific docs
       // socket.broadcast.emit("recieve-changes", delta);
       socket.broadcast.to(doc_id).emit("recieve-changes", delta);
@@ -31,5 +30,5 @@ io.on("connection", async (socket) => {
 server.listen(3001, () => {
   console.log("websocket server listening on PORT " + 3001);
 });
-
+const Update = async (doc_id, value) => {};
 const findOrCreateDocument = (doc_id: string) => {};

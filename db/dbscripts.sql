@@ -66,3 +66,24 @@ CREATE TABLE `creater_content`.`team_members` (
   FOREIGN KEY (`user_id`) REFERENCES `creater_content`.`users` (`user_id`) ON DELETE CASCADE
 );
 
+
+use creater_content;
+drop table documents;
+
+
+create table documents (
+    doc_id varchar(45) primary key,
+    title varchar(255),
+    content TEXT,
+    created_at datetime default NOW(),
+    updated_at datetime default NOW()
+);
+
+create table document_users (
+    `user_id` VARCHAR(45) not null,
+    `doc_id` VARCHAR(45) not null,
+    access tinyint default 0,
+    PRIMARY KEY (`user_id`, `doc_id`),
+    FOREIGN KEY (`user_id`) REFERENCES `creater_content`.`users` (`user_id`) ON DELETE cascade,
+    FOREIGN KEY (`doc_id`) REFERENCES `creater_content`.`documents` (`doc_id`) ON DELETE cascade
+);
