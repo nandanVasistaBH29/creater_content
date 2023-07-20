@@ -54,16 +54,32 @@ const ScriptEditor = () => {
   const router = useRouter();
   const [disable, setDisable] = useState(true);
   const [metaDocData, setMetaDocData] = useState({});
+  const [user, setUser] = useState({});
   const { slug: doc_id } = router.query;
   if (doc_id === "") router.push("/scripts/dashboard");
 
   useEffect(() => {
     setSocket(io("http://localhost:3001"));
-
+    checkUserAccess();
     return () => {
       if (socket) socket.disconnect();
     };
   }, []);
+  const checkUserAccess = async () => {
+    try {
+      const user_id = localStorage.getItem("creater-content-user_id");
+      const res = await axios.get(
+        "/api/scripts/get-doc-users?doc_id=" + doc_id
+      );
+      res.data.data.forEach((user) => {
+        if (user.user_id === user_id) {
+          setUser(user);
+        }
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   useEffect(() => {
     if (socket) {
@@ -79,12 +95,19 @@ const ScriptEditor = () => {
 
   //delta is all the small small changes made on the editor
   function handleChange(content, delta, source, editor) {
-    if (source !== "user" || socket === null) return;
+    if (
+      user.access == "-1" ||
+      user.access == "1" ||
+      source !== "user" ||
+      socket === null
+    )
+      return;
 
     setValue(content);
     socket.emit("send-changes", delta);
   }
   const handleClick_Load = async () => {
+    if (user.access === "-1") return;
     socket.emit("get-document", doc_id);
     socket.once("load-document", (document_content) => {});
     try {
@@ -102,6 +125,7 @@ const ScriptEditor = () => {
     }
   };
   const saveDoc = async () => {
+    if (user.access == "-1" || user.access == "1" || socket === null) return;
     socket.emit("save-document", value);
     try {
       const res = await axios.post("/api/scripts/save-or-create-script", {
@@ -117,6 +141,23 @@ const ScriptEditor = () => {
 
   return (
     <div className="bg-yellow-50 p-4 rounded-lg shadow-md">
+      <div>
+        {user && user.access == "0" && (
+          <p className="p-2 m-2 text-red-600 bg-orange-200 rounded-lg">
+            Viewer : Only Read only any changes cant be saved
+          </p>
+        )}
+        {user && user.access == "1" && (
+          <p className="p-2 m-2 text-purple-600 bg-blue-50 rounded-lg">
+            Editor : Read and Write ✅ but cant add new users to scripts
+          </p>
+        )}
+        {user && user.access == "2" && (
+          <p className="p-2 m-2 text-green-600 bg-green-50 rounded-lg">
+            Owner : All Rights Reserved
+          </p>
+        )}
+      </div>
       {!disable && (
         <QuillNoSSRWrapper
           modules={modules}
@@ -134,12 +175,14 @@ const ScriptEditor = () => {
       >
         Load the Previous Content
       </button>
-      <button
-        onClick={saveDoc}
-        className="bg-blue-600 text-white p-4 m-2 rounded-md"
-      >
-        Save Document
-      </button>
+      {(user.access == "2" || user.access == "1") && (
+        <button
+          onClick={saveDoc}
+          className="bg-blue-600 text-white p-4 m-2 rounded-md"
+        >
+          Save Document
+        </button>
+      )}
     </div>
   );
 };
