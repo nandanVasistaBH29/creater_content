@@ -8,7 +8,7 @@ export default function handler(req, res) {
     }
     const selectQuery = "SELECT * FROM documents WHERE doc_id = ?";
     connection.query(selectQuery, [req.body.doc_id], (err, data) => {
-      if (err || data.length > 1 || !data) {
+      if (err || !data || data.length > 1) {
         console.error("Error querying user:", err);
         connection.release();
         res.status(500).json({ message: "Internal Server Error" });
@@ -17,13 +17,14 @@ export default function handler(req, res) {
 
       if (data.length === 1) {
         const updateQuery =
-          "UPDATE documents SET title = ?, content = ?, updated_at = NOW() WHERE doc_id = ?;";
+          "UPDATE documents SET content = ?, updated_at = NOW() WHERE doc_id = ?;";
         connection.query(
           updateQuery,
-          [req.body.title, req.body.content, req.body.doc_id],
+          [req.body.content, req.body.doc_id],
           (err, update_data) => {
             if (err || update_data.affectedRows !== 1) {
               connection.release();
+              console.log(err);
               res.status(500).json({ err: "Internal server error" });
               return;
             }

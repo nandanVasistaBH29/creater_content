@@ -11,11 +11,13 @@ const Script = () => {
   const router = useRouter();
 
   const createNewDoc = async (e) => {
+    if (newScriptName === "") return;
     const doc_id = uuid();
     e.preventDefault();
     const user_id = localStorage.getItem("creater-content-user_id");
-    if (!user_id) router.push("/auth/login");
+    if (!user_id) router.push("/auth/get-otp-login");
     try {
+      console.log(newScriptName);
       const res = await axios.post("/api/scripts/save-or-create-script", {
         title: newScriptName,
         doc_id,
@@ -27,7 +29,7 @@ const Script = () => {
         access: "2",
       });
       //owner access enum[-1,0,1,2] 2 is owner 1 is editor 0 is viewer -1 no access
-      router.push("/scripts/" + doc_id);
+      router.push("/scripts/" + doc_id + "?title=" + newScriptName);
     } catch (err) {
       console.log(err);
     }
@@ -46,38 +48,55 @@ const Script = () => {
     }
   };
   return (
-    <div>
-      <h1>Script Dashboard</h1>
-      <form>
+    <div className="p-4">
+      <h1 className="text-3xl font-bold mb-4">Script Dashboard</h1>
+      <form className="mb-4">
         <input
           value={newScriptName}
-          placeholder="enter the title of script"
           onChange={(e) => setNewScriptName(e.target.value)}
+          placeholder="Enter the title of the script"
+          className="w-full px-4 py-2 rounded-md border focus:outline-none focus:ring focus:border-blue-600"
         />
         <button
-          className="bg-blue-600 p-4 m-4 text-white rounded-md"
-          onClick={(e) => createNewDoc(e)}
+          onClick={createNewDoc}
+          className="bg-blue-600 p-4 text-white rounded-md mt-4"
         >
           NEW SCRIPT DOC
         </button>
       </form>
       <div>
         {!showOldScripts ? (
-          <button onClick={loadOldScripts}>View All</button>
+          <button
+            onClick={loadOldScripts}
+            className="bg-blue-600 p-2 text-white rounded-md mr-2"
+          >
+            View All
+          </button>
         ) : (
-          <button onClick={() => setShowOldScripts(false)}>Close</button>
+          <button
+            onClick={() => setShowOldScripts(false)}
+            className="bg-red-600 p-2 text-white rounded-md mr-2"
+          >
+            Close
+          </button>
         )}
         {showOldScripts && (
-          <section className=" bg-blue-50">
+          <section className="bg-blue-50 p-4 mt-4">
             {listOfScripts.map((script) => (
               <Link
-                href={`/scripts/${script.doc_id}`}
+                className="p-2 m-2 block border rounded-lg hover:bg-blue-100"
+                href={`/scripts/${script.doc_id}?title=${script.title}`}
                 key={script.doc_id}
-                className="p-2 m-2"
               >
-                <h2>{script.title}</h2>
-                <h3>{timeAgo(script.created_at)} </h3>
-                <h3>{timeAgo(script.updated_at)} </h3>
+                <h2 className="text-lg font-semibold">
+                  {script.title === "" ? "no title" : script.title}
+                </h2>
+                <h3 className="text-gray-600 text-sm">
+                  Created {timeAgo(script.created_at)} ago
+                </h3>
+                <h3 className="text-gray-600 text-sm">
+                  Updated {timeAgo(script.updated_at)} ago
+                </h3>
               </Link>
             ))}
           </section>
