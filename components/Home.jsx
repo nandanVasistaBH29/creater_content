@@ -21,21 +21,19 @@ const HomePage = () => {
       clearInterval(typeInterval);
     };
   }, []);
-
   return (
     <>
       <div className="h-screen bg-gradient-to-r from-teal-400 to-blue-500">
         <div className="container mx-auto py-16">
           <div className="text-center">
-            <h1 className="text-4xl font-bold text-white mb-4">
+            <h1 className="text-5xl font-bold text-white mb-8">
               Welcome to CREATER_CONTENT!
             </h1>
-            <p className="text-lg text-white">{text}</p>
           </div>
-
+          <p className="font-semibold text-white ">{text}</p>
           <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* Manage Videos Section */}
-            <div className="bg-white rounded-lg shadow-lg p-4 flex flex-col items-center">
+            <div className="bg-white rounded-lg shadow-md p-6 flex flex-col items-center transition duration-300 transform hover:-translate-y-1 hover:shadow-lg">
               <Link href={"videos/add-video"}>
                 <img
                   src="/video.svg"
@@ -43,7 +41,7 @@ const HomePage = () => {
                   className="w-full h-48 object-contain mb-4"
                 />
               </Link>
-              <h2 className="text-xl font-semibold mb-2">Manage Videos</h2>
+              <h2 className="text-2xl font-semibold mb-2">Manage Videos</h2>
               <p className="text-gray-700">
                 Upload, Generate Subtitles, and manage your videos all in one
                 place.
@@ -51,7 +49,7 @@ const HomePage = () => {
             </div>
 
             {/* Manage Teams Section */}
-            <div className="bg-white rounded-lg shadow-lg p-4 flex flex-col items-center">
+            <div className="bg-white rounded-lg shadow-md p-6 flex flex-col items-center transition duration-300 transform hover:-translate-y-1 hover:shadow-lg">
               <Link href={"teams/create-team"}>
                 <img
                   src="/team.svg"
@@ -59,14 +57,14 @@ const HomePage = () => {
                   className="w-full h-48 object-contain mb-4"
                 />
               </Link>
-              <h2 className="text-xl font-semibold mb-2">Manage Teams</h2>
+              <h2 className="text-2xl font-semibold mb-2">Manage Teams</h2>
               <p className="text-gray-700">
                 Create and organize teams for your content creation projects.
               </p>
             </div>
 
             {/* Manage Scripts Section */}
-            <div className="bg-white rounded-lg shadow-lg p-4 flex flex-col items-center">
+            <div className="bg-white rounded-lg shadow-md p-6 flex flex-col items-center transition duration-300 transform hover:-translate-y-1 hover:shadow-lg">
               <Link href={"scripts/dashboard"}>
                 <img
                   src="/script.svg"
@@ -74,7 +72,7 @@ const HomePage = () => {
                   className="w-full h-48 object-contain mb-4"
                 />
               </Link>
-              <h2 className="text-xl font-semibold mb-2">Manage Scripts</h2>
+              <h2 className="text-2xl font-semibold mb-2">Manage Scripts</h2>
               <p className="text-gray-700">
                 Create, store, and organize scripts for your films.
               </p>
