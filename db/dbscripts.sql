@@ -21,16 +21,43 @@ CREATE TABLE `creater_content`.`users` (
   FOREIGN KEY (`uploader_id`) REFERENCES `creater_content`.`users` (`user_id`) ON DELETE SET NULL
 );
 
-create table  `creater_content`.`comments`(
-`user_id` VARCHAR(45) NOT NULL,
-`video_id` VARCHAR(45) NOT NULL,
-`comment_id` VARCHAR(45) NOT NULL,
-`likes` BIGINT NOT NULL DEFAULT 0,
-`dis_likes` BIGINT NOT NULL DEFAULT 0,
-PRIMARY KEY (`user_id`,`video_id`,`comment_id`),
-FOREIGN KEY (`user_id`) REFERENCES `creater_content`.`users` (`user_id`) ON DELETE  CASCADE,
-FOREIGN KEY (`video_id`) REFERENCES `creater_content`.`videos` (`video_id`) ON DELETE  CASCADE
+CREATE TABLE `creater_content`.`comments_videos` (
+  `user_id` VARCHAR(45) NOT NULL,
+  `video_id` VARCHAR(45) NOT NULL,
+  `comment_id` VARCHAR(45) NOT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT NOW(),
+  `updated_at` DATETIME NOT NULL DEFAULT NOW() ON UPDATE NOW(),
+  PRIMARY KEY (`user_id`, `video_id`, `comment_id`),
+  FOREIGN KEY (`user_id`) REFERENCES `creater_content`.`users` (`user_id`) ON DELETE CASCADE,
+  FOREIGN KEY (`video_id`) REFERENCES `creater_content`.`videos` (`video_id`) ON DELETE CASCADE
 );
+-- First, add an index to the `comment_id` column
+ALTER TABLE `creater_content`.`comments_videos`
+ADD INDEX `idx_comment_id` (`comment_id`);
+
+-- Then, add the `parent_comment_id` column as a self-referencing foreign key
+ALTER TABLE `creater_content`.`comments_videos`
+ADD COLUMN `parent_comment_id` VARCHAR(45) NULL,
+ADD CONSTRAINT `fk_parent_comment`
+  FOREIGN KEY (`parent_comment_id`)
+  REFERENCES `creater_content`.`comments_videos` (`comment_id`)
+  ON DELETE CASCADE;
+
+
+
+select * from comments_videos;
+create table comment_likes (
+  
+);
+
+ALTER TABLE comments_videos  ADD CONSTRAINT `fk`  FOREIGN KEY (parent_comment_id) REFERENCES comments_videos(comment_id);
+
+ALTER TABLE `creater_content`.`comments_videos` ADD CONSTRAINT `parent_comment_id` FOREIGN KEY (`parent_comment_id`) REFERENCES comments_videos(comment_id) ON DELETE CASCADE;
+
+
+drop table comments_videos;
+
+
 CREATE TABLE `creater_content`.`teams` (
   `team_id` INT NOT NULL AUTO_INCREMENT,
   `team_name` VARCHAR(100) NOT NULL,
