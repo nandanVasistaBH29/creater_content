@@ -10,11 +10,21 @@ const VideoUpload = () => {
   const [submitting, setSubmitting] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [selectedLanguageOption, setSelectedLanguageOption] = useState("en-IN"); // Default value: en-US
+  const [timestamp, setTimestamp] = useState(""); // Empty string as default
   const [videoUploaded, setVideoUploaded] = useState(false);
   const [uploadComplete, setUploadComplete] = useState(false);
+  const options = ["en-GB", "en-IN", "en-US", "hi-IN", "ta-IN", "te-IN"]; // Options for the select dropdown
 
   async function handleSubmit() {
-    if (!file || !title || !description) return;
+    if (
+      !file ||
+      !title ||
+      !description ||
+      !selectedLanguageOption ||
+      !timestamp
+    )
+      return;
     setVideoUploaded(false);
     setError(null);
     setProgress(0);
@@ -22,6 +32,8 @@ const VideoUpload = () => {
 
     const formData = new FormData();
     formData.append("video", file);
+    formData.append("selectedLanguageOption", selectedLanguageOption);
+    formData.append("timestamp", timestamp);
 
     const config = {
       onUploadProgress: function (progressEvent) {
@@ -119,6 +131,36 @@ const VideoUpload = () => {
                 className="py-2 px-4 border rounded"
               />
             </div>
+            <div className="flex items-center mb-4">
+              <label htmlFor="option" className="mr-2 text-teal-500">
+                Select Option:
+              </label>
+              <select
+                id="option"
+                value={selectedLanguageOption}
+                onChange={(e) => setSelectedLanguageOption(e.target.value)}
+                className="py-2 px-4 border rounded"
+              >
+                {options.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex items-center mb-4">
+              <label htmlFor="timestamp" className="mr-2 text-teal-500">
+                Enter Timestamp (HH:MM:SS): for thumbnail
+              </label>
+              <input
+                type="text"
+                id="timestamp"
+                placeholder="00:00:00"
+                value={timestamp}
+                onChange={(e) => setTimestamp(e.target.value)}
+                className="py-2 px-4 border rounded"
+              />
+            </div>
             {progress !== 0 && (
               <p className="text-teal-500 mt-2 text-xs text-center">
                 Uploading: {progress}%
@@ -127,7 +169,14 @@ const VideoUpload = () => {
             <button
               onClick={handleSubmit}
               className="bg-teal-500 text-white py-2 px-4 rounded mt-4 hover:bg-teal-600"
-              disabled={!file || !title || !description || submitting}
+              disabled={
+                !file ||
+                !title ||
+                !description ||
+                !selectedLanguageOption ||
+                !timestamp ||
+                submitting
+              }
             >
               {submitting ? "Uploading..." : "Upload Video"}
             </button>

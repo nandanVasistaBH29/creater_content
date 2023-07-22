@@ -16,7 +16,10 @@ import srtConvert from "aws-transcription-to-srt";
 
 const rootFolder = path.resolve("./");
 
-export default async function generateSubtitles(videoId) {
+export default async function generateSubtitles(
+  videoId,
+  selectedLanguageOption
+) {
   try {
     const transcribe = new AWS.TranscribeService({
       region: process.env.S3_BUCKET_REGION,
@@ -29,7 +32,7 @@ export default async function generateSubtitles(videoId) {
       MediaFormat: "wav",
       OutputBucketName: process.env.S3_BUCKET_NAME,
       OutputKey: `${videoId}.json`,
-      LanguageCode: "en-US",
+      LanguageCode: selectedLanguageOption,
       TranscriptionJobName: `${videoId}-subtitles-generation`,
     };
 

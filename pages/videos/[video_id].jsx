@@ -9,7 +9,7 @@ function VideoPage() {
   return (
     <>
       <NavBar />
-      {/* <VideoPlayer video_id={video_id} /> */}
+      <VideoPlayer video_id={video_id} />
       <Comments video_id={video_id} />
     </>
   );
