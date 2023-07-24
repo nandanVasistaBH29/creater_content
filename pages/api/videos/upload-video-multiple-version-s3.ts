@@ -37,6 +37,9 @@ export default async function handler(
       return;
     }
 
+    const selectedLanguageOption = fields.selectedLanguageOption[0];
+    const timestamp_thumbnail = fields.timestamp[0];
+
     let { filepath, originalFilename } = files.video[0];
 
     if (!originalFilename) {
@@ -65,7 +68,7 @@ export default async function handler(
       await extractAudio(originalFilePath, audioFolder + `/${videoId}.wav`);
       await uploadFile(audioFolder + `/${videoId}.wav`, `${videoId}.wav`); //upload the audio file to s3 so that AWS transcriber can generate subtitles
       try {
-        await generateSubtitles(videoId);
+        await generateSubtitles(videoId, selectedLanguageOption);
         const videosFolder = path.join(rootFolder, "videos");
         await burnSubtitles(
           videosFolder + `/${videoId}.mp4`,
@@ -101,7 +104,8 @@ export default async function handler(
       await convertVideoToThumbnail(
         videosFolder + `/${videoId}.mp4`,
         thumbnailFolder + "/" + videoId + ".png",
-        RESOLUTIONS[0].dimensions
+        RESOLUTIONS[0].dimensions,
+        timestamp_thumbnail
       )
         .then(async (outputPath) => {
           await uploadFile(

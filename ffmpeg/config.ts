@@ -43,13 +43,14 @@ export const RESOLUTIONS = [
 export async function convertVideoToThumbnail(
   src: string,
   out: string,
-  resolution: string
+  resolution: string,
+  timestamp_thumbnail: string
 ): Promise<string> {
   const args = [
     "-i",
     src, // input video
     "-ss",
-    "00:00:01", // capture the thumbnail at 1 second into the video
+    timestamp_thumbnail, // capture the thumbnail at timestamp_thumbnail second into the video
     "-vframes",
     "1", // generate a single frame (thumbnail)
     "-s",

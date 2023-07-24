@@ -1,5 +1,6 @@
 import NavBar from "../../components/Navbar";
 import VideoPlayer from "../../components/VideoPlayer";
+import Comments from "../../components/Comments";
 import { useRouter } from "next/router";
 
 function VideoPage() {
@@ -9,6 +10,7 @@ function VideoPage() {
     <>
       <NavBar />
       <VideoPlayer video_id={video_id} />
+      <Comments video_id={video_id} />
     </>
   );
 }
