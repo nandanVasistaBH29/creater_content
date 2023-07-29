@@ -30,5 +30,3 @@ io.on("connection", async (socket) => {
 server.listen(3001, () => {
   console.log("websocket server listening on PORT " + 3001);
 });
-const Update = async (doc_id, value) => {};
-const findOrCreateDocument = (doc_id: string) => {};
